@@ -1,0 +1,37 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: inventory-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  datasource:
+    url: jdbc:mysql://localhost:3306/inventory_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3000ms
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+# MQ：生产方 inventory-producer-group；消费方按职责分组（扣减 / 恢复）
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: inventory-producer-group
+  consumer:
+    group: inventory-consumer-group

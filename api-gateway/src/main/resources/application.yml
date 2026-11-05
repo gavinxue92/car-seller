@@ -1,0 +1,89 @@
+server:
+  # 唯一入口：外部只允许访问 9000，业务服务端口不对外暴露
+  port: 9000
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册中心：网关与被路由的业务服务都注册在此
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          # 关闭按服务名自动路由（默认即 false，显式声明以强调"路由必须显式配置"）
+          enabled: false
+      # 全局跨域：由网关统一响应 CORS 头，业务服务不再重复配置，避免响应头重复
+      globalcors:
+        # 未匹配路由的预检请求（OPTIONS）也交给跨域处理器，否则浏览器预检会 404/401
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            exposedHeaders:
+              - X-Request-Id
+            allowCredentials: true
+            maxAge: 3600
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 10s
+      # 6 条路由：/api/** 前缀原样透传（无 StripPrefix），由各服务的 @RequestMapping 承接
+      # 目标统一使用 lb://<spring.application.name>，服务名禁止改名
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+        - id: cart-service
+          uri: lb://cart-service
+          predicates:
+            - Path=/api/cart/**
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+
+# JWT 配置：密钥必须由环境变量 JWT_SECRET（或 Nacos 配置中心）覆盖，仓库中不含生产密钥
+jwt:
+  secret: ${JWT_SECRET:car-seller-dev-secret-key-please-change-in-prod-32bytes}
+  expire-hours: 2
+  header: Authorization
+  prefix: "Bearer "
+
+# 网关鉴权白名单：格式 "HTTP方法 路径模式"，方法可用 * 表示任意方法；未命中的请求必须携带合法 JWT
+gateway:
+  auth:
+    whitelist:
+      # 商品只读接口允许匿名浏览
+      - "GET /api/products/**"
+      - "HEAD /api/products/**"
+      # 库存只读接口允许匿名浏览（商品详情页展示可售库存；写操作 deduct/restore 仍需登录）
+      - "GET /api/inventory/*"
+      - "HEAD /api/inventory/*"
+      # 登录/注册接口本身不能要求携带 Token
+      - "POST /api/auth/login"
+      - "POST /api/auth/register"
+      # 健康检查 / 运维探活
+      - "* /actuator/**"
+      # 说明：支付渠道回调（Phase 4 定义具体路径后加入，如 "POST /api/payments/callback/**"）
+      #      需同时做渠道签名校验，不得直接放行全部 POST /api/payments/**（发起支付必须登录）
+
+logging:
+  level:
+    com.carseller.gateway: info

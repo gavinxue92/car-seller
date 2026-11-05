@@ -1,0 +1,56 @@
+# car-seller（父 pom 位于仓库根，多模块 Maven 项目）
+# 规则：只忽略「本机产生的、可再生的、与团队无关的」文件。
+# 必须入库：README.md、.clinerules、sql/*.sql、各模块 src/**、各模块 pom.xml、application.yml
+
+# ---------- Maven 构建产物（8 个模块共约 330MB）----------
+target/
+*.jar
+*.war
+*.class
+dependency-reduced-pom.xml
+
+# ---------- 运行日志 ----------
+logs/
+*.log
+proceed-while-running-*.log
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
+
+# ---------- IDE（本机配置，各人不同）----------
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.classpath
+.project
+.settings/
+.factorypath
+.vscode/
+*.code-workspace
+
+# ---------- 本机私有配置（覆盖 application.yml 用）----------
+application-local.yml
+application-local.yaml
+application-*.local.yml
+application-*.local.yaml
+.env
+*.local
+
+# ---------- Cline 本地会话与缓存 ----------
+.cline/
+.cline_cache/
+
+# ---------- 操作系统 ----------
+Thumbs.db
+Desktop.ini
+desktop.ini
+.DS_Store
+
+# ---------- 临时文件 ----------
+*.tmp
+*.bak
+*.orig
+*.swp
+*~

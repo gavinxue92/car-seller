@@ -1,0 +1,33 @@
+server:
+  # 购物车服务端口（README 4.1：8082，外部统一经 api-gateway:9000 访问）
+  port: 8082
+
+spring:
+  application:
+    name: cart-service
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册中心：服务名 cart-service 与网关 lb://cart-service 一一对应，禁止改名
+        server-addr: localhost:8848
+    # OpenFeign 全局超时：读超时小于网关 response-timeout（10s），避免线程长时间占用
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
+            logger-level: basic
+  data:
+    # 购物车数据以 Redis 为准：Hash cart:{userId}（field=productId, value=数量）
+    #                    Set  cart:selected:{userId}（member=选中的 productId）
+    # 不配置数据源（Phase 2 不接入 cart_db，禁止直连数据库）
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3000ms
+
+logging:
+  level:
+    com.carseller.cart: info

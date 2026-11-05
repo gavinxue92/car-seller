@@ -1,0 +1,45 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: product-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/product_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    hikari:
+      pool-name: ProductHikariPool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  # 后续如需自定义 XML，放在 resources/mapper 目录下即可被加载
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.carseller.product.entity
+  configuration:
+    # 数据库下划线字段自动映射为驼峰属性（image_url -> imageUrl）
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    # SQL 日志交给 SLF4J 输出，配合下方 logging.level 打印
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      # 主键策略：数据库自增
+      id-type: auto
+      table-underline: true
+
+logging:
+  level:
+    com.carseller.product: info
+    com.carseller.product.mapper: debug

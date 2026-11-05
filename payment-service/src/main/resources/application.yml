@@ -1,0 +1,13 @@
+server:
+  port: 8085
+spring:
+  application:
+    name: payment-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: payment-producer-group

@@ -1,0 +1,69 @@
+server:
+  # 订单服务端口（README 4.1：8083，外部统一经 api-gateway:9000 访问）
+  port: 8083
+
+spring:
+  application:
+    name: order-service
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册中心：服务名 order-service 与网关 lb://order-service 一一对应，禁止改名
+        server-addr: localhost:8848
+    # OpenFeign 全局超时：读超时小于网关 response-timeout（10s），避免线程长时间占用
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 3000
+            read-timeout: 5000
+            logger-level: basic
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/order_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    hikari:
+      pool-name: OrderHikariPool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+# MyBatis-Plus 配置（与 product-service 保持一致，README 12.6）
+mybatis-plus:
+  # 后续如需自定义 XML，放在 resources/mapper 目录下即可被加载
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.carseller.order.entity
+  configuration:
+    # 数据库下划线字段自动映射为驼峰属性（order_id -> orderId）
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    # SQL 日志交给 SLF4J 输出，配合下方 logging.level 打印
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      # 主键策略：数据库自增（orders.id 同时作为 MQ 消息 Key）
+      id-type: auto
+      table-underline: true
+
+# RocketMQ：NameServer 9876，生产组固定 order-producer-group（README 7.3，不可与其他服务共用）
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: order-producer-group
+    # 单条消息发送超时（毫秒），与 OrderConstants.SEND_TIMEOUT_MILLIS 保持一致
+    send-message-timeout: 3000
+  consumer:
+    # 默认消费组：消费 order-paid-topic（README 7.3 固定，禁止改名）
+    # 注意：inventory-deduct-result-topic 的消费逻辑不同，由 InventoryDeductResultConsumer
+    # 在 @RocketMQMessageListener 上显式声明 consumerGroup=order-deduct-result-group
+    group: order-paid-consumer-group
+
+logging:
+  level:
+    com.carseller.order: info
+    com.carseller.order.mapper: debug

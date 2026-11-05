@@ -1,0 +1,42 @@
+# car-seller 基线 v3（源 README.md 2046 行；只读下列行段，不读全文）
+
+## 纪律（违反会被返工，与铁律同级）
+读：
+- 一次读完本任务需要的文件与行段，不分多轮补读；已读过的文件不再读。
+- 读取用 read_files；禁止 Get-Content / Select-String / 目录遍历代替；查符号用 search_codebase。
+
+写：
+- 一次 editor 写 3–6 个文件，同层实体 / Mapper / DTO 同批；同一文件 ≤2 次，编译失败只改出错行。
+- 同一文件第 2 次修改后仍失败：停下，贴错误原文与你的判断，等指示，不要出第 3 版。
+
+构建：
+- 前台同步跑完再一次性读输出；禁止 Start-Sleep、读 proceed-while-running-*.log、后台轮询。
+- 每任务 ≤3 次；无新增源文件前不构建；依赖版本只认根 pom 与本文，禁查 .m2 / mavenRepo / jar 目录。
+
+收尾：
+- 文档回填 1 次调用完成，只改命中行段。
+- 自查（缺一即未完成）：编译通过；需求逐条对应到文件；无 System.out、空 catch；新增 Topic / 表 / 端点已同步 README。
+- 单任务 ≤25 轮；第 20 轮仍未进入构建 → 收尾并列出未完成项。
+
+## 不可违反的契约
+- 公共类（R / ResultCode / PageResult / 异常 / 工具 / MQ 事件）只能在 car-seller-common；任务可对其**仅追加**，禁改已有签名与常量值；业务模块内禁副本。
+- 业务服务启动类需 `@ComponentScan({"com.carseller.<模块>", "com.carseller.common"})`。
+- 订单状态单向流转，变更一律 `UPDATE ... WHERE id=? AND status=?`，0 行即 ACK，禁抛异常重试。
+- MQ：topic / group / tag 见下表且禁改，Key 恒为 orderId，发送必须显式带 topic + tag + key。
+- 幂等双防线：Redis SETNX + 业务唯一键，缺一不可；消费失败抛异常重试（耗尽进 %DLQ%），禁 catch 后 ACK。
+- 库存唯一真源 `inventories.quantity`；`products.stock` 仅展示冗余，单向同步。
+- 响应恒 HTTP 200，业务结果看 code；错误码段位：1xxxx 通用 / 2xxxx 商品 / 3xxxx 购物车 / 4xxxx 订单 / 5xxxx 库存 / 6xxxx 支付，统一进 ResultCode。
+
+| Topic | Producer group | Consumer group | Tag |
+|---|---|---|---|
+| order-created-topic | order-producer-group | inventory-consumer-group | ORDER_CREATED |
+| inventory-deduct-result-topic | inventory-producer-group | order-deduct-result-group | DEDUCT_SUCCESS / DEDUCT_FAILED |
+| order-paid-topic | payment-producer-group | order-paid-consumer-group | ORDER_PAID |
+| order-cancelled-topic | order-producer-group | inventory-restore-group | ORDER_CANCELLED |
+
+## 端口与版本
+gateway 9000｜product 8081｜cart 8082｜order 8083｜inventory 8084｜payment 8085；包名 com.carseller.<模块>；Nacos 8848 / MySQL 3306 / Redis 6379 / MQ 9876；新服务 8086 起。
+JDK 17｜Boot 3.0.7｜Cloud 2022.0.0｜Alibaba 2022.0.0.0｜MyBatis-Plus 3.5.5｜mysql-connector-j 8.0.33｜rocketmq-spring-boot-starter 2.2.3。
+
+## 附录：README 行段（只读需要的）
+4 模块与端口 221-318｜5 目录结构 319-437｜6 数据模型 438-566｜7 流程与 Topic 567-790｜8 API 与端点 791-1036｜9 开发规范 1037-1181｜13 Phase 与验收 1637-1669

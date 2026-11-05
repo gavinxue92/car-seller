@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.carseller</groupId>
+    <artifactId>car-seller</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>car-seller-common</artifactId>
+  <!-- 普通 jar 模块：公共代码载体，禁止打包成 Spring Boot 可执行程序（不引入 spring-boot-maven-plugin） -->
+  <packaging>jar</packaging>
+  <description>car-seller 公共模块：统一响应 R、状态码 ResultCode、分页 PageResult、业务异常与全局异常处理器</description>
+  <dependencies>
+    <!-- 仅为编译 GlobalExceptionHandler 所需，provided 不向下传递，由各业务服务自行提供 web 能力 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- 仅为编译 jakarta.validation 相关异常类型，provided 不向下传递 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- JWT（com.carseller.common.security.JwtUtils）：api 编译期可见，impl/jackson 运行期由各服务传递获得 -->
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+</project>

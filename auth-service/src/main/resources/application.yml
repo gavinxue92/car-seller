@@ -1,0 +1,58 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: auth-service
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册中心：网关按 lb://auth-service 负载均衡
+        server-addr: localhost:8848
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/auth_db?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    hikari:
+      pool-name: AuthHikariPool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  # 后续如需自定义 XML，放在 resources/mapper 目录下即可被加载
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.carseller.auth.entity
+  configuration:
+    # 数据库下划线字段自动映射为驼峰属性（avatar_url -> avatarUrl）
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    # SQL 日志交给 SLF4J 输出，配合下方 logging.level 打印
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      # 主键策略：数据库自增
+      id-type: auto
+      table-underline: true
+      # 逻辑删除字段（users.deleted）：0 未删除、1 已删除
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT 配置：必须与 api-gateway 使用同一密钥，生产环境通过环境变量 JWT_SECRET 覆盖
+jwt:
+  secret: ${JWT_SECRET:car-seller-dev-secret-key-please-change-in-prod-32bytes}
+  expire-hours: 2
+  header: Authorization
+  prefix: "Bearer "
+
+logging:
+  level:
+    com.carseller.auth: info
+    com.carseller.auth.mapper: debug
